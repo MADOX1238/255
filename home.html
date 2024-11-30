@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ar"> 
+ <head> 
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <title>الصفحة الرئيسية - Spherely</title> 
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f2f5;
+    }
+
+    .error-message {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 18px;
+      color: red;
+    }
+  </style>
+ </head> 
+ <body> 
+  <div id="content" style="display: none;"> 
+    <!-- محتوى الصفحة الرئيسي -->
+    <div class="navbar">Spherely</div>
+    <div class="container">
+      <textarea id="postContent" class="post-input" placeholder="اكتب منشورك هنا..."></textarea>
+      <button id="postButton" class="post-button">نشر</button>
+      <div id="postsContainer" class="posts"></div>
+    </div>
+  </div>
+  <div id="error" class="error-message" style="display: none;">
+    خطأ: لا يمكنك الوصول إلى هذه الصفحة مباشرة. يرجى تسجيل الدخول أولاً.
+  </div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+    // تهيئة Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyD2i7QSJMpN_GUH44s6FCa4FPd4CcacjQU",
+      authDomain: "aslaa-aadd9.firebaseapp.com",
+      databaseURL: "https://aslaa-aadd9-default-rtdb.firebaseio.com",
+      projectId: "aslaa-aadd9",
+      storageBucket: "aslaa-aadd9.firebasestorage.app",
+      messagingSenderId: "862690377553",
+      appId: "1:862690377553:web:1addb4ee0d8b4a5f589d70",
+      measurementId: "G-RKNKL008R3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    // التحقق من تسجيل الدخول
+    const loggedIn = localStorage.getItem('loggedIn');
+    const username = localStorage.getItem('username');
+
+    if (!loggedIn || !username) {
+      document.getElementById('error').style.display = 'block';
+    } else {
+      document.getElementById('content').style.display = 'block';
+
+      // عناصر الصفحة
+      const postButton = document.getElementById('postButton');
+      const postContent = document.getElementById('postContent');
+      const postsContainer = document.getElementById('postsContainer');
+
+      // نشر المنشور إلى Firebase
+      postButton.addEventListener('click', () => {
+        const content = postContent.value.trim();
+
+        if (content === '') {
+          alert('المنشور لا يمكن أن يكون فارغاً!');
+          return;
+        }
+
+        const postRef = ref(database, 'posts');
+        push(postRef, { username, content });
+
+        // مسح حقل الإدخال
+        postContent.value = '';
+      });
+
+      // عرض المنشورات من Firebase
+      const postsRef = ref(database, 'posts');
+      onValue(postsRef, (snapshot) => {
+        postsContainer.innerHTML = ''; // مسح المنشورات الحالية
+        snapshot.forEach((childSnapshot) => {
+          const postData = childSnapshot.val();
+          const postElement = document.createElement('div');
+          postElement.classList.add('post');
+
+          // إضافة اسم المستخدم
+          const usernameElement = document.createElement('div');
+          usernameElement.textContent = postData.username;
+
+          // إضافة المحتوى
+          const contentElement = document.createElement('div');
+          contentElement.textContent = postData.content;
+
+          postElement.appendChild(usernameElement);
+          postElement.appendChild(contentElement);
+
+          // إضافة المنشور إلى الصفحة
+          postsContainer.appendChild(postElement);
+        });
+      });
+    }
+  </script> 
+ 
+</body></html>
